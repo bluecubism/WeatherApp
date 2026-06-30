@@ -2,5 +2,23 @@
     <string name="app_name">Weather App</string>
     <string name="refresh_button_text">Get Weather</string>
     <string name="refresh_waiting_text">Getting the weather...</string>
-    <string name="unknown_temp">\?°C</string>
+
+    <string name="sunny">Sunny</string>
+
+    <string name="no_rain">No rain</string>
+    <string name="light_rain">Drizzle</string>
+    <string name="light_snow">Flurry</string>
+    <string name="rainy">Rainy</string>
+    <string name="snowy">Snowy</string>
+    <string name="heavy_rain">Heavy rain</string>
+    <string name="heavy_snow">Heavy snow</string>
+
+    <string name="no_clouds">No clouds</string>
+    <string name="partly_cloudy">Partly cloudy</string>
+    <string name="cloudy">Cloudy</string>
+
+    <string name="no_fog">No fog</string>
+    <string name="slightly_foggy">Misty</string>
+    <string name="mostly_foggy">Foggy</string>
+    <string name="foggy">Dense fog</string>
 </resources>

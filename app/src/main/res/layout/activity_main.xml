@@ -8,25 +8,46 @@
     android:background="@drawable/app_background"
     tools:context=".MainActivity" >
 
+    <!-- refreshing items -->
+    <ProgressBar
+        android:id="@+id/progress_refresh"
+        android:layout_above="@id/text_refresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true" />
+
+    <TextView
+        android:id="@+id/text_refresh"
+        android:text="@string/refresh_waiting_text"
+        android:textColor="@color/white"
+        android:layout_above="@id/button_refresh"
+        android:layout_marginBottom="10sp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!-- button to fetch data -->
     <Button
         android:id="@+id/button_refresh"
         android:text="@string/refresh_button_text"
         android:backgroundTint="@color/white"
+        android:layout_above="@id/text_timestamp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true" />
-    
     <TextView
         android:id="@+id/text_timestamp"
         android:text="Timestamp"
         android:textColor="@color/white"
-        android:layout_below="@id/button_refresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="60sp"
         android:layout_marginTop="5sp"/>
 
+    <!-- data -->
     <TextView
         android:id="@+id/text_station_name"
         android:text="Station Name"
@@ -39,7 +60,7 @@
 
     <TextView
         android:id="@+id/text_air_temperature"
-        android:text="@string/unknown_temp"
+        android:text="\?°C"
         android:textColor="@color/white"
         android:textSize="40sp"
         android:layout_marginTop="5sp"
@@ -48,52 +69,68 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/text_station_name"/>
 
+    <!-- main weather -->
+    <ImageView
+        android:id="@+id/image_main_weather"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/text_air_temperature"
+        android:src="@drawable/cloudy" />
+    <TextView
+        android:id="@+id/text_main_weather"
+        android:text="Current Weather"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:layout_marginTop="-10dp"
+        android:layout_below="@id/image_main_weather"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!-- inflate this layout with views -->
+    <LinearLayout
+        android:id="@+id/layout_info"
+        android:layout_below="@id/text_main_weather"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+    </LinearLayout>
+
     <TextView
         android:id="@+id/text_relative_humidity"
         android:text="Relative Humidity"
         android:textColor="@color/white"
         android:textSize="15sp"
+        android:layout_below="@id/layout_info"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/text_air_temperature"
-        android:layout_marginTop="5sp"
+        android:layout_margin="5sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-<!--    <TextView-->
-<!--        android:id="@+id/text_station_pressure"-->
-<!--        android:text="Station Pressure"-->
-<!--        android:textColor="@color/white"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content" />-->
-
     <TextView
-        android:id="@+id/text_snow_depth"
-        android:text="Snow Depth"
+        android:id="@+id/text_wind_speed"
+        android:text="Wind Speed"
         android:textColor="@color/white"
         android:textSize="15sp"
-        android:layout_centerHorizontal="true"
         android:layout_below="@id/text_relative_humidity"
-        android:layout_marginTop="10sp"
+        android:layout_centerHorizontal="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <ProgressBar
-        android:id="@+id/progress_refresh"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/text_timestamp"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
+    <!-- forecast -->
+<!--    <HorizontalScrollView-->
+<!--        android:id="@+id/scrollview_forecast"-->
+<!--        android:layout_below="@id/text_wind_gust"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent" >-->
 
-    <TextView
-        android:id="@+id/text_refresh"
-        android:text="@string/refresh_waiting_text"
-        android:textColor="@color/white"
-        android:layout_below="@id/progress_refresh"
-        android:layout_centerInParent="true"
-        android:layout_marginTop="5sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone" />
+<!--        <LinearLayout-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent" >-->\
+<!--        </LinearLayout>-->
+<!--    </HorizontalScrollView>-->
 
 </RelativeLayout>
