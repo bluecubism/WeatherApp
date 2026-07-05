@@ -1,1 +1,1 @@
-Toy weather app that displays the temperature, relative humidity, and snow depth from info gotten from a station in Toronto.
+Weather app that displays the current temperature, relative humidity, etc. using data from an API maintained by ECCC (Environment and Climate Change Canada).
