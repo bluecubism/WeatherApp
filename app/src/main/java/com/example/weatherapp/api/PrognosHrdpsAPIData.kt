@@ -1,10 +1,10 @@
-package com.example.weatherapp
+package com.example.weatherapp.api
 
 import com.google.gson.annotations.SerializedName
 
 // hourly forecast data
 
-data class PrognosHrdpsData( // root
+data class PrognosHrdpsAPIData( // root
     val type: String,
     val features: List<HrdpsFeature>,
     val numberMatched: Long,
