@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text_station_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Station Name"
+        android:textColor="@color/white"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/text_air_temperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="\?°C"
+        android:textColor="@color/white"
+        android:textSize="40sp" />
+
+    <!-- main weather -->
+    <ImageView
+        android:id="@+id/image_main_weather"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/cloudy" />
+
+    <TextView
+        android:id="@+id/text_main_weather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Current Weather"
+        android:textColor="@color/white"
+        android:textSize="25sp" />
+
+    <!-- sub views -->
+    <LinearLayout
+        android:id="@+id/view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" />
+
+</LinearLayout>

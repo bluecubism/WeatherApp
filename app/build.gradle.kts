@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.weatherapp"
+    namespace = "com.weatherapp"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.weatherapp"
+        applicationId = "com.weatherapp"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -59,4 +59,8 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+
+    // Coil (loading image from urls)
+    implementation("io.coil-kt.coil3:coil:3.0.4")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.4")
 }
