@@ -1,5 +1,6 @@
 package com.weatherapp.api
 
+import android.util.Log
 import com.weatherapp.MainActivity
 import com.weatherapp.R
 import com.weatherapp.api.apidata.*
@@ -12,6 +13,7 @@ class ApiConverter {
      * Convert the current weather data (CityPageWeather Realtime).
      */
     fun CPWRealtimeToWeatherSnapshot(
+        m: MainActivity,
         features: List<CityPageWeatherRealtimeApiData.Feature>)
         : WeatherSnapshot
     {
@@ -24,8 +26,10 @@ class ApiConverter {
         data.relHum = "${currConds.relativeHumidity?.value?.en}${currConds.relativeHumidity?.units?.en}"
 
         data.windSpeed = "${currConds.wind?.speed?.value?.en}${currConds.wind?.speed?.units?.en}"
-        if (!currConds.wind?.gust?.units?.en.isNullOrEmpty())
+        if (!currConds.wind?.gust?.units?.en.isNullOrEmpty()) {
             data.windGust = "${currConds.wind.gust.value.en}${currConds.wind.gust.units.en}"
+        }
+
         if (!currConds.wind?.direction?.windDirFull?.en.isNullOrEmpty()) {
             data.windDir = currConds.wind.direction.windDirFull.en
         }
@@ -33,10 +37,42 @@ class ApiConverter {
             data.windDir = currConds.wind.direction.value.en
         }
 
-        data.weather = "${currConds.condition?.en}"
         // use a locally stored image if possible, and load the image from the url if not
         data.weatherImg = CPWRealtimeIconCodeToDrawable(currConds.iconCode.value)
-        if (!currConds.iconCode.url.isNullOrEmpty()) data.weatherImgUrl = currConds.iconCode.url
+        if (!currConds.iconCode.url.isNullOrEmpty()) { data.weatherImgUrl = currConds.iconCode.url }
+
+        // get the text to display from the icon code or condition
+        if (!currConds.condition?.en.isNullOrEmpty()) { data.weather = currConds.condition.en }
+        else { // get weather from the drawable
+            when (data.weatherImg) {
+                R.drawable.sunny
+                    -> data.weather = "${m.resources.getText(R.string.sunny)}"
+
+                R.drawable.sunny_s_cloudy,
+                R.drawable.partly_cloudy,
+                R.drawable.cloudy_s_sunny
+                    -> data.weather = "${m.resources.getText(R.string.partly_cloudy)}"
+
+                R.drawable.rain_light
+                    -> data.weather = "${m.resources.getText(R.string.light_rain)}"
+                R.drawable.rain
+                    -> data.weather = "${m.resources.getText(R.string.rainy)}"
+                R.drawable.rain_heavy
+                    -> data.weather = "${m.resources.getText(R.string.heavy_rain)}"
+
+                R.drawable.snow_light
+                    -> data.weather = "${m.resources.getText(R.string.light_snow)}"
+                R.drawable.snow
+                    -> data.weather = "${m.resources.getText(R.string.snowy)}"
+                R.drawable.snow_heavy
+                    -> data.weather = "${m.resources.getText(R.string.heavy_snow)}"
+
+                R.drawable.thunderstorms
+                    -> data.weather = "${m.resources.getText(R.string.thunder)}"
+
+                else -> data.weather = "${m.resources.getText(R.string.clear)}"
+            }
+        }
 
         return data
     }
@@ -48,14 +84,16 @@ class ApiConverter {
         features: List<CityPageWeatherRealtimeApiData.Feature>)
         : List<WeatherSnapshot>
     {
-        val data = listOf<WeatherSnapshot>()
+        val data = mutableListOf<WeatherSnapshot>()
         val hourlyForecasts = features.first().properties.hourlyForecastGroup.hourlyForecasts
+        Log.d("INFO", "Hourly forecasts: $hourlyForecasts")
 
         for (forecast in hourlyForecasts) {
             val currData = WeatherSnapshot()
+            currData.timestamp = forecast.timestamp
             currData.weather = forecast.condition.en
             currData.weatherImg = CPWRealtimeIconCodeToDrawable(forecast.iconCode.value)
-            currData.airTemp = "${forecast.temperature.value.en}${forecast.temperature.units.en}"
+            currData.airTemp = "${forecast.temperature.value.en}°${forecast.temperature.units.en}"
             currData.windSpeed = "${forecast.wind.speed.value.en}${forecast.wind.speed.units.en}"
             if (!forecast.wind.direction?.windDirFull?.en.isNullOrEmpty()) {
                 currData.windDir = forecast.wind.direction.windDirFull.en
@@ -63,6 +101,7 @@ class ApiConverter {
             else if (!forecast.wind.direction?.value?.en.isNullOrEmpty()) {
                 currData.windDir = forecast.wind.direction.value.en
             }
+            data.add(currData)
         }
 
         return data
@@ -100,7 +139,7 @@ class ApiConverter {
         data.relHum = properties.relHum.toString() + properties.relHumUom
 
         // if any unit is missing, get the last n entries or past x hours, whichever is closer
-        var i : Int = 1 // already checked the first property, go to the next
+        var i = 1 // already checked the first property, go to the next
         while (i < features.size) {
             var allEntriesNonEmpty = true
             properties = features[i].properties
@@ -158,7 +197,7 @@ class ApiConverter {
         if (!windGustUnit.isNullOrEmpty()) data.windGust = "$windGust$windGustUnit"
 
         // update precipitation
-        var pcpnText = "" // used later to decide default text for main weather
+        var pcpnText : String // used later to decide default text for main weather
         if (!pcpnUnit.isNullOrEmpty()) {
             data.pcpn = "$pcpnAmt$pcpnUnit"
             if (pcpnAmt <= 0) { // 0 mm
@@ -219,7 +258,7 @@ class ApiConverter {
         }
 
         // update fogginess
-        var fogText = "" // used later to decide the weather if precipitation status is sunny
+        var fogText : String // used later to decide the weather if precipitation status is sunny
         if (!visUnit.isNullOrEmpty()) {
             data.vis = "$vis$visUnit"
             if (vis < 1) { // visibility is <1km

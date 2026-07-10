@@ -16,11 +16,18 @@
         app:layout_constraintGuide_percent="0.1" />
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_horizontal_middle"
+        android:id="@+id/guideline_horizontal_40"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.40" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_horizontal_50"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.50" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_horizontal_bottom"
@@ -29,28 +36,16 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.8" />
 
-    <Button
-        android:id="@+id/button_whichdata"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/white"
-        android:text="@string/data_button_userawdata"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button_refresh"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/guideline_horizontal_bottom" />
-
     <LinearLayout
         android:id="@+id/view_current_weather"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_horizontal_middle"
+        app:layout_constraintBottom_toTopOf="@+id/guideline_horizontal_40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/guideline_horizontal_top" />
 
-    <!-- refreshing items -->
     <HorizontalScrollView
         android:id="@+id/view_predicted_weather"
         android:layout_width="wrap_content"
@@ -59,13 +54,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline_horizontal_middle"
+        app:layout_constraintTop_toTopOf="@+id/guideline_horizontal_50"
         app:layout_constraintVertical_bias="0.0">
 
-<!--        <LinearLayout-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:orientation="vertical" />-->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
     </HorizontalScrollView>
 
     <ProgressBar
@@ -82,24 +76,38 @@
         android:id="@+id/text_refresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/button_refresh"
+        android:layout_above="@id/layout_buttons"
         android:text="@string/refresh_waiting_text"
         android:textColor="@color/white"
-        app:layout_constraintBottom_toTopOf="@+id/button_refresh"
+        app:layout_constraintBottom_toTopOf="@+id/layout_buttons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline_horizontal_bottom" />
 
-    <!-- button to fetch data -->
-    <Button
-        android:id="@+id/button_refresh"
+    <LinearLayout
+        android:id="@+id/layout_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/white"
-        android:text="@string/refresh_button_text"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/guideline_horizontal_bottom" />
+        app:layout_constraintTop_toTopOf="@+id/guideline_horizontal_bottom">
+
+        <Button
+            android:id="@+id/button_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/white"
+            android:text="@string/refresh_button_text" />
+
+        <Button
+            android:id="@+id/button_whichdata"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/white"
+            android:text="@string/data_button_userawdata" />
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

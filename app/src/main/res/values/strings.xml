@@ -4,9 +4,12 @@
     <string name="data_button_userawdata">Raw Data</string>
     <string name="data_button_useprocesseddata">Processed Data</string>
     <string name="refresh_button_text">Get Weather</string>
-    <string name="refresh_waiting_text">Getting the weather...</string>
+    <string name="refresh_waiting_text">Getting the weather…</string>
 
+    <string name="clear">Clear</string>
     <string name="sunny">Sunny</string>
+
+    <string name="thunder">Thunder</string>
 
     <string name="no_rain">No rain</string>
     <string name="light_rain">Drizzle</string>
