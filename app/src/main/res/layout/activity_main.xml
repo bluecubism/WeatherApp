@@ -29,6 +29,17 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.8" />
 
+    <Button
+        android:id="@+id/button_whichdata"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
+        android:text="@string/data_button_userawdata"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button_refresh"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/guideline_horizontal_bottom" />
+
     <LinearLayout
         android:id="@+id/view_current_weather"
         android:layout_width="wrap_content"
@@ -90,4 +101,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/guideline_horizontal_bottom" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

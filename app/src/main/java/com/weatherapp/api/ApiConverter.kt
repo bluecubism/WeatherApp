@@ -8,8 +8,12 @@ import kotlin.collections.first
 
 class ApiConverter {
 
-    fun cityPageWeatherRealtimeToWeatherSnapshot(features: List<CityPageWeatherRealtimeApiData.Feature>)
-                                                : WeatherSnapshot
+    /**
+     * Convert the current weather data (CityPageWeather Realtime).
+     */
+    fun CPWRealtimeToWeatherSnapshot(
+        features: List<CityPageWeatherRealtimeApiData.Feature>)
+        : WeatherSnapshot
     {
         val data = WeatherSnapshot()
         val properties = features.first().properties
@@ -30,46 +34,47 @@ class ApiConverter {
         }
 
         data.weather = "${currConds.condition?.en}"
+        // use a locally stored image if possible, and load the image from the url if not
+        data.weatherImg = CPWRealtimeIconCodeToDrawable(currConds.iconCode.value)
         if (!currConds.iconCode.url.isNullOrEmpty()) data.weatherImgUrl = currConds.iconCode.url
 
-        // if url fails to load, then use a local image
-        // https://eccc-msc.github.io/open-data/msc-data/citypage-weather/readme_citypageweather-datamart_en/
-        when (currConds.iconCode.value) {
-            0 -> data.weatherImg = R.drawable.sunny // Sunny
-            1 -> data.weatherImg = R.drawable.sunny_s_cloudy // Mainly Sunny
-            2 -> data.weatherImg = R.drawable.partly_cloudy // Partly Cloudy
-            3 -> data.weatherImg = R.drawable.cloudy_s_sunny // Mostly Cloudy
-            6 -> data.weatherImg = R.drawable.rain_light // Light Rain Shower
-            7 -> data.weatherImg = R.drawable.rain_s_snow // Light Rain Shower & Flurries
-            8 -> data.weatherImg = R.drawable.snow_light // Light Flurries
-            10 -> data.weatherImg = R.drawable.cloudy // Cloudy
-            11, 12 -> data.weatherImg = R.drawable.rain
-            13 -> data.weatherImg = R.drawable.rain_heavy
-            16, 17 -> data.weatherImg = R.drawable.snow
-            18 -> data.weatherImg = R.drawable.snow_heavy
-            19 -> data.weatherImg = R.drawable.thunderstorms
-            24 -> data.weatherImg = R.drawable.fog
-            // and more icon codes
+        return data
+    }
+
+    /**
+     * Convert the forecasted weather data (CityPageWeather Realtime).
+     */
+    fun CPWRealtimeHourlyForecastToWeatherSnapshot(
+        features: List<CityPageWeatherRealtimeApiData.Feature>)
+        : List<WeatherSnapshot>
+    {
+        val data = listOf<WeatherSnapshot>()
+        val hourlyForecasts = features.first().properties.hourlyForecastGroup.hourlyForecasts
+
+        for (forecast in hourlyForecasts) {
+            val currData = WeatherSnapshot()
+            currData.weather = forecast.condition.en
+            currData.weatherImg = CPWRealtimeIconCodeToDrawable(forecast.iconCode.value)
+            currData.airTemp = "${forecast.temperature.value.en}${forecast.temperature.units.en}"
+            currData.windSpeed = "${forecast.wind.speed.value.en}${forecast.wind.speed.units.en}"
+            if (!forecast.wind.direction?.windDirFull?.en.isNullOrEmpty()) {
+                currData.windDir = forecast.wind.direction.windDirFull.en
+            }
+            else if (!forecast.wind.direction?.value?.en.isNullOrEmpty()) {
+                currData.windDir = forecast.wind.direction.value.en
+            }
         }
 
         return data
     }
 
-    fun cityPageWeatherRealtimeHourlyForecastToWeatherSnapshot(
-            features: List<CityPageWeatherRealtimeApiData.Feature>)
-            : List<WeatherSnapshot>
-    {
-        val data = listOf<WeatherSnapshot>()
-        val hourlyForecasts = features.first().properties.hourlyForecastGroup.hourlyForecasts
-
-        // TODO: hourly forecast
-
-        return data
-    }
-
-    fun swobRealtimeToWeatherSnapshot(m: MainActivity,
-                                      features: List<SwobRealtimeApiData.Feature>)
-                                    : WeatherSnapshot
+    /**
+     * Convert the current raw weather data (SWOB Realtime).
+     */
+    fun swobRealtimeToWeatherSnapshot(
+        m: MainActivity,
+        features: List<SwobRealtimeApiData.Feature>)
+        : WeatherSnapshot
     {
         val data = WeatherSnapshot()
 
@@ -292,5 +297,31 @@ class ApiConverter {
         data.weatherImg = mainWeatherImage
 
         return data
+    }
+
+    /**
+     * Get the locally-stored image to use based on the icon code.
+     * Local images using the following:
+     * https://eccc-msc.github.io/open-data/msc-data/citypage-weather/readme_citypageweather-datamart_en/
+     */
+    private fun CPWRealtimeIconCodeToDrawable(iconCode : Int) : Int {
+        when (iconCode) {
+            0 -> return R.drawable.sunny // Sunny
+            1 -> return R.drawable.sunny_s_cloudy // Mainly Sunny
+            2 -> return R.drawable.partly_cloudy // Partly Cloudy
+            3 -> return R.drawable.cloudy_s_sunny // Mostly Cloudy
+            6 -> return R.drawable.rain_light // Light Rain Shower
+            7 -> return R.drawable.rain_s_snow // Light Rain Shower & Flurries
+            8 -> return R.drawable.snow_light // Light Flurries
+            10 -> return R.drawable.cloudy // Cloudy
+            11, 12 -> return R.drawable.rain
+            13 -> return R.drawable.rain_heavy
+            16, 17 -> return R.drawable.snow
+            18 -> return R.drawable.snow_heavy
+            19 -> return R.drawable.thunderstorms
+            24 -> return R.drawable.fog
+            // and more icon codes
+            else -> return 0
+        }
     }
 }

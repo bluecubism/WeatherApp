@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Weather App</string>
+
+    <string name="data_button_userawdata">Raw Data</string>
+    <string name="data_button_useprocesseddata">Processed Data</string>
     <string name="refresh_button_text">Get Weather</string>
     <string name="refresh_waiting_text">Getting the weather...</string>
 
