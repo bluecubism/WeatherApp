@@ -5,6 +5,9 @@ import com.weatherapp.MainActivity
 import com.weatherapp.R
 import com.weatherapp.api.apidata.*
 import com.weatherapp.snapshot.*
+import java.time.OffsetDateTime
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.collections.first
 
 class ApiConverter {
@@ -90,10 +93,18 @@ class ApiConverter {
 
         for (forecast in hourlyForecasts) {
             val currData = WeatherSnapshot()
-            currData.timestamp = forecast.timestamp
+
+            val zoneId = ZonedDateTime.now().zone // ex. get zone id of "America/New_York"
+            val timestamp = OffsetDateTime.parse(forecast.timestamp).atZoneSameInstant(zoneId)
+            val timeFormat = DateTimeFormatter.ofPattern("h:mma") // ex. display time as 3:00PM or 10:00PM
+            currData.timestamp = timeFormat.format(timestamp)
+
             currData.weather = forecast.condition.en
             currData.weatherImg = CPWRealtimeIconCodeToDrawable(forecast.iconCode.value)
+            if (!forecast.iconCode.url.isNullOrEmpty()) { currData.weatherImgUrl = forecast.iconCode.url }
+
             currData.airTemp = "${forecast.temperature.value.en}°${forecast.temperature.units.en}"
+
             currData.windSpeed = "${forecast.wind.speed.value.en}${forecast.wind.speed.units.en}"
             if (!forecast.wind.direction?.windDirFull?.en.isNullOrEmpty()) {
                 currData.windDir = forecast.wind.direction.windDirFull.en
@@ -101,6 +112,7 @@ class ApiConverter {
             else if (!forecast.wind.direction?.value?.en.isNullOrEmpty()) {
                 currData.windDir = forecast.wind.direction.value.en
             }
+
             data.add(currData)
         }
 

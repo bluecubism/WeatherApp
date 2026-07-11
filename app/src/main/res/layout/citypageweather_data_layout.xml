@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     android:background="@drawable/sub_app_background"
     android:gravity="center_horizontal"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:layout_margin="5sp">
 
     <TextView
         android:id="@+id/text_station_name"
@@ -13,7 +14,8 @@
         android:layout_height="wrap_content"
         android:text="Station Name"
         android:textColor="@color/white"
-        android:textSize="15sp" />
+        android:textSize="15sp"
+        android:layout_marginTop="5sp"/>
 
     <TextView
         android:id="@+id/text_air_temperature"
@@ -44,6 +46,7 @@
         android:id="@+id/view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        android:layout_marginBottom="5sp"/>
 
 </LinearLayout>
