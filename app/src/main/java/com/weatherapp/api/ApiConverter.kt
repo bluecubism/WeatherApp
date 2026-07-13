@@ -1,13 +1,13 @@
 package com.weatherapp.api
 
-import android.util.Log
-import com.weatherapp.MainActivity
+import android.content.Context
 import com.weatherapp.R
 import com.weatherapp.api.apidata.*
 import com.weatherapp.snapshot.*
 import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.collections.first
 
 class ApiConverter {
@@ -16,64 +16,74 @@ class ApiConverter {
      * Convert the current weather data (CityPageWeather Realtime).
      */
     fun CPWRealtimeToWeatherSnapshot(
-        m: MainActivity,
+        context: Context,
         features: List<CityPageWeatherRealtimeApiData.Feature>)
         : WeatherSnapshot
     {
         val data = WeatherSnapshot()
         val properties = features.first().properties
-        val currConds = properties.currentConditions
+        val conds = properties.currentConditions
 
         data.stationName = properties.region.en // use region name
-        data.airTemp = "${currConds.temperature.value.en}°${currConds.temperature.units.en}"
-        data.relHum = "${currConds.relativeHumidity?.value?.en}${currConds.relativeHumidity?.units?.en}"
+        data.airTemp = "${conds.temperature.value.en}°${conds.temperature.units.en}"
+        data.relHum = "${conds.relativeHumidity?.value?.en}${conds.relativeHumidity?.units?.en}"
 
-        data.windSpeed = "${currConds.wind?.speed?.value?.en}${currConds.wind?.speed?.units?.en}"
-        if (!currConds.wind?.gust?.units?.en.isNullOrEmpty()) {
-            data.windGust = "${currConds.wind.gust.value.en}${currConds.wind.gust.units.en}"
+        val windSpeed = conds.wind?.speed?.value?.en.toString() // wind speed can be a number or "calm"
+        if (windSpeed.all { c -> c.isDigit() || c == '.' }) { // if wind speed is a number
+            data.windSpeed = "$windSpeed${conds.wind?.speed?.units?.en}" // add km/h at the end
+            // add wind direction (i.e. E)
+            if (!conds.wind?.direction?.windDirFull?.en.isNullOrEmpty()) {
+                data.windDir = conds.wind.direction.windDirFull.en
+            }
+            else if (!conds.wind?.direction?.value?.en.isNullOrEmpty()) {
+                data.windDir = conds.wind.direction.value.en
+            }
+        } else { // if wind speed is a string, capitalize the first letter
+            data.windSpeed = windSpeed.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(Locale.ROOT)
+                else it.toString()
+            }
         }
 
-        if (!currConds.wind?.direction?.windDirFull?.en.isNullOrEmpty()) {
-            data.windDir = currConds.wind.direction.windDirFull.en
-        }
-        else if (!currConds.wind?.direction?.value?.en.isNullOrEmpty()) {
-            data.windDir = currConds.wind.direction.value.en
+        // add wind gust
+        if (!conds.wind?.gust?.units?.en.isNullOrEmpty()) {
+            data.windGust = "${conds.wind.gust.value.en}${conds.wind.gust.units.en}"
         }
 
         // use a locally stored image if possible, and load the image from the url if not
-        data.weatherImg = CPWRealtimeIconCodeToDrawable(currConds.iconCode.value)
-        if (!currConds.iconCode.url.isNullOrEmpty()) { data.weatherImgUrl = currConds.iconCode.url }
+        data.weatherImg = CPWRealtimeIconCodeToDrawable(conds.iconCode.value)
+        if (!conds.iconCode.url.isNullOrEmpty()) { data.weatherImgUrl = conds.iconCode.url }
 
         // get the text to display from the icon code or condition
-        if (!currConds.condition?.en.isNullOrEmpty()) { data.weather = currConds.condition.en }
+        if (!conds.condition?.en.isNullOrEmpty()) { data.weather = conds.condition.en }
         else { // get weather from the drawable
             when (data.weatherImg) {
                 R.drawable.sunny
-                    -> data.weather = "${m.resources.getText(R.string.sunny)}"
+                    -> data.weather = "${context.getText(R.string.sunny)}"
 
                 R.drawable.sunny_s_cloudy,
                 R.drawable.partly_cloudy,
                 R.drawable.cloudy_s_sunny
-                    -> data.weather = "${m.resources.getText(R.string.partly_cloudy)}"
+                    -> data.weather = "${context.getText(R.string.partly_cloudy)}"
 
                 R.drawable.rain_light
-                    -> data.weather = "${m.resources.getText(R.string.light_rain)}"
+                    -> data.weather = "${context.getText(R.string.light_rain)}"
                 R.drawable.rain
-                    -> data.weather = "${m.resources.getText(R.string.rainy)}"
+                    -> data.weather = "${context.getText(R.string.rainy)}"
                 R.drawable.rain_heavy
-                    -> data.weather = "${m.resources.getText(R.string.heavy_rain)}"
+                    -> data.weather = "${context.getText(R.string.heavy_rain)}"
 
                 R.drawable.snow_light
-                    -> data.weather = "${m.resources.getText(R.string.light_snow)}"
+                    -> data.weather = "${context.getText(R.string.light_snow)}"
                 R.drawable.snow
-                    -> data.weather = "${m.resources.getText(R.string.snowy)}"
+                    -> data.weather = "${context.getText(R.string.snowy)}"
                 R.drawable.snow_heavy
-                    -> data.weather = "${m.resources.getText(R.string.heavy_snow)}"
+                    -> data.weather = "${context.getText(R.string.heavy_snow)}"
 
                 R.drawable.thunderstorms
-                    -> data.weather = "${m.resources.getText(R.string.thunder)}"
+                    -> data.weather = "${context.getText(R.string.thunder)}"
 
-                else -> data.weather = "${m.resources.getText(R.string.clear)}"
+                else -> data.weather = "${context.getText(R.string.clear)}"
             }
         }
 
@@ -89,7 +99,6 @@ class ApiConverter {
     {
         val data = mutableListOf<WeatherSnapshot>()
         val hourlyForecasts = features.first().properties.hourlyForecastGroup.hourlyForecasts
-        Log.d("INFO", "Hourly forecasts: $hourlyForecasts")
 
         for (forecast in hourlyForecasts) {
             val currData = WeatherSnapshot()
@@ -122,8 +131,8 @@ class ApiConverter {
     /**
      * Convert the current raw weather data (SWOB Realtime).
      */
-    fun swobRealtimeToWeatherSnapshot(
-        m: MainActivity,
+    fun SwobRealtimeToWeatherSnapshot(
+        context: Context,
         features: List<SwobRealtimeApiData.Feature>)
         : WeatherSnapshot
     {
@@ -214,38 +223,38 @@ class ApiConverter {
             data.pcpn = "$pcpnAmt$pcpnUnit"
             if (pcpnAmt <= 0) { // 0 mm
                 data.pcpnImg = R.drawable.sunny
-                pcpnText = "${m.resources.getText(R.string.no_rain)}"
+                pcpnText = context.getText(R.string.no_rain).toString()
             } else if (pcpnAmt <= 2.5) {
                 if (isSnowy) {
                     data.pcpnImg = R.drawable.snow_light
-                    pcpnText = "${m.resources.getText(R.string.light_snow)}"
+                    pcpnText = "${context.getText(R.string.light_snow)}"
                 }
                 else {
                     data.pcpnImg = R.drawable.rain_light
-                    pcpnText = "${m.resources.getText(R.string.light_rain)}"
+                    pcpnText = "${context.getText(R.string.light_rain)}"
                 }
             } else if (pcpnAmt <= 10) {
                 if (isSnowy) {
                     data.pcpnImg = R.drawable.snow
-                    pcpnText = "${m.resources.getText(R.string.snowy)}"
+                    pcpnText = "${context.getText(R.string.snowy)}"
                 }
                 else {
                     data.pcpnImg = R.drawable.rain
-                    pcpnText = "${m.resources.getText(R.string.rainy)}"
+                    pcpnText = "${context.getText(R.string.rainy)}"
                 }
             } else {
                 if (isSnowy) {
                     data.pcpnImg = R.drawable.snow_heavy
-                    pcpnText = "${m.resources.getText(R.string.heavy_snow)}"
+                    pcpnText = "${context.getText(R.string.heavy_snow)}"
                 }
                 else {
                     data.pcpnImg = R.drawable.rain_heavy
-                    pcpnText = "${m.resources.getText(R.string.heavy_rain)}"
+                    pcpnText = "${context.getText(R.string.heavy_rain)}"
                 }
             }
         } else {
             data.pcpnImg = R.drawable.sunny
-            pcpnText = "${m.resources.getText(R.string.no_rain)}"
+            pcpnText = "${context.getText(R.string.no_rain)}"
         }
         data.pcpn += "\n$pcpnText"
 
@@ -254,19 +263,19 @@ class ApiConverter {
             data.cloudAmt = "$cloudAmt$cloudAmtUnit"
             if (cloudAmt <= 30) { // 30% clouds
                 data.cloudAmtImg = R.drawable.sunny
-                data.cloudAmt += "\n${m.resources.getText(R.string.no_clouds)}"
+                data.cloudAmt += "\n${context.getText(R.string.no_clouds)}"
             }
             else if (cloudAmt <= 60) {
                 data.cloudAmtImg = R.drawable.partly_cloudy
-                data.cloudAmt += "\n${m.resources.getText(R.string.partly_cloudy)}"
+                data.cloudAmt += "\n${context.getText(R.string.partly_cloudy)}"
             }
             else {
                 data.cloudAmtImg = R.drawable.cloudy
-                data.cloudAmt += "\n${m.resources.getText(R.string.cloudy)}"
+                data.cloudAmt += "\n${context.getText(R.string.cloudy)}"
             }
         } else {
             data.cloudAmtImg = R.drawable.sunny
-            data.cloudAmt += "\n${m.resources.getText(R.string.no_clouds)}"
+            data.cloudAmt += "\n${context.getText(R.string.no_clouds)}"
         }
 
         // update fogginess
@@ -275,23 +284,23 @@ class ApiConverter {
             data.vis = "$vis$visUnit"
             if (vis < 1) { // visibility is <1km
                 data.visImg = R.drawable.fog
-                fogText = "${m.resources.getText(R.string.foggy)}"
+                fogText = "${context.getText(R.string.foggy)}"
             }
             else if (vis < 10) { // 10km
                 data.visImg = R.drawable.cloudy
-                fogText = "${m.resources.getText(R.string.mostly_foggy)}"
+                fogText = "${context.getText(R.string.mostly_foggy)}"
             }
             else if (vis < 30) {
                 data.visImg = R.drawable.cloudy_s_sunny
-                fogText = "${m.resources.getText(R.string.slightly_foggy)}"
+                fogText = "${context.getText(R.string.slightly_foggy)}"
             }
             else {
                 data.visImg = R.drawable.sunny
-                fogText = "${m.resources.getText(R.string.no_fog)}"
+                fogText = "${context.getText(R.string.no_fog)}"
             }
         } else {
             data.visImg = R.drawable.sunny
-            fogText = "${m.resources.getText(R.string.no_fog)}"
+            fogText = "${context.getText(R.string.no_fog)}"
         }
         data.vis += "\n$fogText"
 
@@ -333,13 +342,13 @@ class ApiConverter {
                     mainWeatherText = fogText
                     mainWeatherImage = R.drawable.fog
                 } else if (data.cloudAmtImg == R.drawable.cloudy) {
-                    mainWeatherText = m.resources.getText(R.string.cloudy).toString()
+                    mainWeatherText = context.getText(R.string.cloudy).toString()
                     mainWeatherImage = R.drawable.cloudy
                 } else if (data.cloudAmtImg == R.drawable.partly_cloudy) {
-                    mainWeatherText = m.resources.getText(R.string.partly_cloudy).toString()
+                    mainWeatherText = context.getText(R.string.partly_cloudy).toString()
                     mainWeatherImage = R.drawable.partly_cloudy
                 } else {
-                    mainWeatherText = m.resources.getText(R.string.sunny).toString()
+                    mainWeatherText = context.getText(R.string.sunny).toString()
                     mainWeatherImage = R.drawable.sunny
                 }
             }
