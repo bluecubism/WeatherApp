@@ -32,7 +32,7 @@ class WeatherViewModel : ViewModel() {
 
                 _weathers.postValue(Pair(currWeather, predictedWeather))
 
-                Log.d("INFO", "Finished fetching weather API data")
+                Log.d("WeatherViewModel", "Finished fetching weather API data")
             }
         } catch (e: Exception) {
             Log.e("WeatherViewModel", "Exception occurred while fetching weather API data: $e")

@@ -212,8 +212,14 @@ data class CityPageWeatherRealtimeApiData(
     )
 
     data class Direction(
-        @SerializedName("windDirFull") val windDirFull: LocalizedText?, // i.e. North
-        @SerializedName("value") val value: LocalizedText? // i.e. N
+        /**
+         * i.e. North, Northeast
+         */
+        @SerializedName("windDirFull") val windDirFull: LocalizedText?,
+        /**
+         * i.e. N, NE
+         */
+        @SerializedName("value") val value: LocalizedText?
     )
 
     data class IconCode(

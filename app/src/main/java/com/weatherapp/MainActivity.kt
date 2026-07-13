@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -14,23 +15,26 @@ import androidx.activity.ComponentActivity
 import coil3.load
 import coil3.request.placeholder
 import com.weatherapp.snapshot.WeatherSnapshot
+import java.util.Calendar
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 // TODO:
 //  add settings for weather interval & city
 //    save settings
 //    ui for upcoming weather interval (1 hr, 3 hrs, etc)
 //    let user choose city to view weather of
-//  auto refresh data every hr (i.e. exactly at 1:00pm, etc)
 //  unit test, api test
 
 class MainActivity : ComponentActivity() {
     private var _useRawData = false
+    private lateinit var _weatherViewModel : WeatherViewModel
+
+    private lateinit var _btnSettings : ImageButton
     private lateinit var _btnData : Button
     private lateinit var _btnRefresh : Button
     private lateinit var _progressRefresh : ProgressBar
     private lateinit var _txtRefresh : TextView
-
-    private lateinit var _weatherViewModel : WeatherViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +42,22 @@ class MainActivity : ComponentActivity() {
 
         setup()
         fetchData() // fetch on startup
+
+        // schedule task to run every hour, i.e. at 8:00AM, then 9:00AM, etc
+        val scheduler = ScheduledThreadPoolExecutor(1)
+        val nextHr = Calendar.getInstance()
+        nextHr.add(Calendar.HOUR, 1) // get next hour
+        nextHr.set(Calendar.MINUTE, 0)
+        nextHr.set(Calendar.SECOND, 0)
+        nextHr.set(Calendar.MILLISECOND, 0)
+        val initialDelay = nextHr.timeInMillis - Calendar.getInstance().timeInMillis
+        scheduler.scheduleWithFixedDelay(
+            {
+                Log.d("MainActivity", "Run scheduled task (update weathers), ${Calendar.getInstance()}")
+                runOnUiThread { fetchData() }
+            },
+            // start at next hour, run again in 1 hr (3,600,000 ms)
+            initialDelay, 3600000, TimeUnit.MILLISECONDS)
     }
 
     private fun fetchData() {
@@ -58,6 +78,7 @@ class MainActivity : ComponentActivity() {
     private fun setup() {
         _weatherViewModel = WeatherViewModel()
 
+        _btnSettings = findViewById(R.id.button_settings)
         _btnData = findViewById(R.id.button_whichdata)
         _btnRefresh = findViewById(R.id.button_refresh)
         _progressRefresh = findViewById(R.id.progress_refresh)
