@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/main_app_background"
-    android:orientation="vertical"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <androidx.constraintlayout.widget.Guideline
@@ -14,37 +14,30 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.1" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_horizontal_bottom"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.8" />
+        app:layout_constraintGuide_percent="0.0" />
 
     <ImageButton
-        android:id="@+id/imageButton"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="15dp"
+        android:id="@+id/button_settings"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:adjustViewBounds="true"
         android:background="@drawable/transparent"
         android:scaleType="fitCenter"
         android:src="@drawable/gear"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_horizontal_top"
-        app:layout_constraintStart_toStartOf="parent"/>
+        android:layout_marginStart="15dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/view_current_weather"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10sp"
+        android:layout_margin="10dp"
         android:background="@drawable/sub_app_background"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/guideline_horizontal_top" />
+        app:layout_constraintTop_toBottomOf="@+id/button_settings" />
 
     <ScrollView
         android:id="@+id/view_predicted_weather"
@@ -110,8 +103,7 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline_horizontal_bottom">
+        app:layout_constraintStart_toStartOf="parent">
 
         <Button
             android:id="@+id/button_refresh"
