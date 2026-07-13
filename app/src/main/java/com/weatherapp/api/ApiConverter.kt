@@ -105,7 +105,7 @@ class ApiConverter {
 
             val zoneId = ZonedDateTime.now().zone // ex. get zone id of "America/New_York"
             val timestamp = OffsetDateTime.parse(forecast.timestamp).atZoneSameInstant(zoneId)
-            val timeFormat = DateTimeFormatter.ofPattern("h:mma") // ex. display time as 3:00PM or 10:00PM
+            val timeFormat = DateTimeFormatter.ofPattern("h:mm a") // ex. display time as 3:00PM or 10:00PM
             currData.timestamp = timeFormat.format(timestamp)
 
             currData.weather = forecast.condition.en
