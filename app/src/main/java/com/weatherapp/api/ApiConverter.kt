@@ -21,6 +21,9 @@ class ApiConverter {
         : WeatherSnapshot
     {
         val data = WeatherSnapshot()
+
+        if (features.isEmpty()) return data
+
         val properties = features.first().properties
         val conds = properties.currentConditions
 
@@ -98,8 +101,10 @@ class ApiConverter {
         : List<WeatherSnapshot>
     {
         val data = mutableListOf<WeatherSnapshot>()
-        val hourlyForecasts = features.first().properties.hourlyForecastGroup.hourlyForecasts
 
+        if (features.isEmpty()) return data
+
+        val hourlyForecasts = features.first().properties.hourlyForecastGroup.hourlyForecasts
         for (forecast in hourlyForecasts) {
             val currData = WeatherSnapshot()
 
@@ -137,6 +142,8 @@ class ApiConverter {
         : WeatherSnapshot
     {
         val data = WeatherSnapshot()
+
+        if (features.isEmpty()) return data
 
         var properties = features.first().properties
         val isSnowy : Boolean = properties.airTemp <= 0

@@ -1,7 +1,5 @@
 package com.weatherapp
 
-import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -14,14 +12,18 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.preference.PreferenceManager
 import coil3.load
 import coil3.request.placeholder
 import com.weatherapp.snapshot.WeatherSnapshot
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 // TODO:
+//  auto refresh data if a setting changed
 //  add settings for weather interval (1 hr, 3 hrs, etc)
 //  unit test, integration test, api test, ui test
 
@@ -30,7 +32,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var _weatherViewModel : WeatherViewModel
 
     private lateinit var _btnSettings : ImageButton
-    private lateinit var _btnData : Button
+
     private lateinit var _btnRefresh : Button
     private lateinit var _progressRefresh : ProgressBar
     private lateinit var _txtRefresh : TextView
@@ -38,6 +40,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val useRawData = prefs.getBoolean("use_raw_data_key", _useRawData)
+        _useRawData = useRawData
 
         setup()
         fetchData() // fetch on startup
@@ -61,15 +67,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun fetchData() {
-        _progressRefresh.visibility = View.VISIBLE
-        _txtRefresh.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            _progressRefresh.visibility = View.VISIBLE
+            _txtRefresh.visibility = View.VISIBLE
 
-        // hide previous predicted weather forecasts
-        val currView = findViewById<ViewGroup>(R.id.view_predicted_weather).getChildAt(0) as ViewGroup
-        currView.visibility = View.INVISIBLE
+            // hide previous predicted weather forecasts
+            val currView = findViewById<ViewGroup>(R.id.view_predicted_weather).getChildAt(0) as ViewGroup
+            currView.visibility = View.INVISIBLE
 
-        // fetch the data
-        _weatherViewModel.fetch(this, _useRawData)
+            // fetch the data
+            _weatherViewModel.fetch(this@MainActivity)
+
+            _weatherViewModel.weathers.collect { data ->
+                Log.v("MainActivity", "${data.first}")
+                setupCurrentWeatherView(true)
+                updateCurrentWeatherUI(data.first)
+                updatePredictedWeatherUI(data.second)
+                _progressRefresh.visibility = View.INVISIBLE
+                _txtRefresh.visibility = View.INVISIBLE
+            }
+
+        }
     }
 
     /* =============================
@@ -79,7 +97,6 @@ class MainActivity : ComponentActivity() {
         _weatherViewModel = WeatherViewModel()
 
         _btnSettings = findViewById(R.id.button_settings)
-        _btnData = findViewById(R.id.button_whichdata)
         _btnRefresh = findViewById(R.id.button_refresh)
         _progressRefresh = findViewById(R.id.progress_refresh)
         _txtRefresh = findViewById(R.id.text_refresh)
@@ -88,48 +105,48 @@ class MainActivity : ComponentActivity() {
         _progressRefresh.visibility = View.INVISIBLE
         _txtRefresh.visibility = View.INVISIBLE
 
-        // add self as observer
-        _weatherViewModel.weathers.observe(this) { data ->
-            updateCurrentWeatherUI(data.first)
-            updatePredictedWeatherUI(data.second)
-            _progressRefresh.visibility = View.INVISIBLE
-            _txtRefresh.visibility = View.INVISIBLE
-        }
 
         // set button on-clicks
         _btnSettings.setOnClickListener {
-            Log.d("SettingsActivity", "Settings button pressed, going to Settings")
             val i = Intent(this, SettingsActivity::class.java)
             startActivity(i)
         }
 
         _btnRefresh.setOnClickListener { // fetch data if user clicks the refresh button
-            Log.d("MainActivity", "Refresh button pressed, re-getting weather data")
             fetchData()
         }
 
-        _btnData.setOnClickListener { // swap to using the other data (raw or processed) and re-fetch the data
-            _useRawData = !_useRawData
-            Log.d("MainActivity", "Changing between raw <-> processed data. Will use raw data? $_useRawData")
-            if (_useRawData) {
-                _btnData.text = resources.getText(R.string.data_button_useprocesseddata)
-            } else {
-                _btnData.text = resources.getText(R.string.data_button_userawdata)
-            }
-            val currWeatherView = findViewById<ViewGroup>(R.id.view_current_weather)
-            currWeatherView.removeAllViews() // remove all views to use the other data layout
-            setupCurrentWeatherView()
-            fetchData()
-        }
+//        // add self as observer
+//        _weatherViewModel.weathers.observe(this) { data ->
+//            Log.v("MainActivity", "$data.first")
+//            setupCurrentWeatherView(true)
+//            updateCurrentWeatherUI(data.first)
+//            updatePredictedWeatherUI(data.second)
+//            _progressRefresh.visibility = View.INVISIBLE
+//            _txtRefresh.visibility = View.INVISIBLE
+//        }
 
         // inflate current weather view group
-        setupCurrentWeatherView()
+        setupCurrentWeatherView(false)
     }
 
-    private fun setupCurrentWeatherView() {
+    private fun setupCurrentWeatherView(alreadyInflatedView : Boolean) {
         // inflate with views
         var currWeatherView = findViewById<ViewGroup>(R.id.view_current_weather)
-        if (!_useRawData) { /* (only if using city page weather realtime) */
+
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val useRawData = prefs.getBoolean("use_raw_data_key", _useRawData)
+
+        if (useRawData != _useRawData) {
+            _useRawData = useRawData
+            currWeatherView.removeAllViews()
+        } else if (alreadyInflatedView) {
+            // leave if there's no change in the setting
+            // and the view has already been inflated
+            return
+        }
+
+        if (!_useRawData) { // (only if using city page weather realtime)
             // inflate activity_main
             val currWeather = layoutInflater.inflate(R.layout.citypageweather_data_layout, currWeatherView)
             currWeatherView = currWeather.findViewById(R.id.view)
@@ -147,7 +164,7 @@ class MainActivity : ComponentActivity() {
             img = currWeatherView.getChildAt(1).findViewById(R.id.image_temp)
             img.setImageResource(R.drawable.windy)
             (inflated.layoutParams as LinearLayout.LayoutParams).bottomMargin = 10
-        } else { /* (only if using swob realtime) */
+        } else { // (only if using swob realtime)
             // inflate main layout with the swob data layout
             val currWeather = layoutInflater.inflate(R.layout.swob_data_layout, currWeatherView)
             // inflate weather data layout with the subweathers
@@ -161,7 +178,6 @@ class MainActivity : ComponentActivity() {
     /* =============================
               UPDATE UI
     ============================= */
-    @SuppressLint("SetTextI18n")
     private fun updateCurrentWeatherUI(data: WeatherSnapshot) {
         var txt : TextView
         var img : ImageView
@@ -201,7 +217,7 @@ class MainActivity : ComponentActivity() {
             var subView = currView.getChildAt(0)
             txt = subView.findViewById(R.id.text)
             // no need to change image for humidity
-            txt.text = "${data.relHum}\nHumidity"
+            txt.text = "${data.relHum}\n${getText(R.string.humidity)}"
 
             // update wind speed
             subView = currView.getChildAt(1)
@@ -209,7 +225,7 @@ class MainActivity : ComponentActivity() {
             // no need to change image for wind
             var str = data.windSpeed
             if (!data.windDir.isEmpty()) str += " ${data.windDir}"
-            if (!data.windGust.isEmpty()) str += "\nGust to ${data.windGust}"
+            if (!data.windGust.isEmpty()) str += "\n${getText(R.string.gust_to)} ${data.windGust}"
             txt.text = str
         } else { /* (only if using swob realtime) */
             // main weather image
@@ -217,16 +233,16 @@ class MainActivity : ComponentActivity() {
 
             // relative humidity
             txt = findViewById(R.id.text_relative_humidity)
-            txt.text = "Relative Humidity: " + data.relHum
+            txt.text = "${getText(R.string.relative_humidity)}: " + data.relHum
 
             // wind speed
             txt = findViewById(R.id.text_wind_speed)
             if (data.windSpeed.isEmpty()) {
-                txt.text = "Wind Speed: Calm"
+                txt.text = "${getText(R.string.wind_speed)}: ${getText(R.string.calm)}"
             } else {
-                var str = "Wind Speed: ${data.windSpeed}"
+                var str = "${getText(R.string.wind_speed)}: ${data.windSpeed}"
                 if (!data.windDir.isEmpty()) str += " (${data.windDir})"
-                if (!data.windGust.isEmpty()) str += "\nGusting to ${data.windGust}"
+                if (!data.windGust.isEmpty()) str += "\n${getText(R.string.gusting_to)} ${data.windGust}"
                 txt.text = str
             }
 
@@ -259,7 +275,6 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "Done updating current weather UI")
     }
 
-    @SuppressLint("SetTextI18n")
     private fun updatePredictedWeatherUI(dataList: List<WeatherSnapshot>) {
         // get the linear layout inside the horizontal scroll view
         val currView = findViewById<ViewGroup>(R.id.view_predicted_weather).getChildAt(0) as ViewGroup

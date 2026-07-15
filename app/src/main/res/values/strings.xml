@@ -1,10 +1,23 @@
 <resources>
     <string name="app_name">Weather App</string>
 
-    <string name="data_button_userawdata">Use Raw Data</string>
-    <string name="data_button_useprocesseddata">Use Processed Data</string>
-    <string name="refresh_button_text">Get Weather</string>
-    <string name="refresh_waiting_text">Getting the weather…</string>
+    <string name="use_raw_data">Use raw data</string>
+    <string name="use_raw_data_summary">Use raw data or processed data.
+        \n\nRaw data is acquired from weather surface observations, which this app then translates into the current weather.
+        \n\nProcessed data is weather data that is pre-processed by Environment Canada</string>
+
+    <string name="settings">Settings</string>
+    <string name="city">City</string>
+
+    <string name="humidity">Humidity</string>
+    <string name="relative_humidity">Relative Humidity</string>
+    <string name="wind_speed">Wind Speed</string>
+    <string name="gust_to">Gust to</string>
+    <string name="gusting_to">Gusting to</string>
+    <string name="calm">Calm</string>
+
+    <string name="get_weather">Get Weather</string>
+    <string name="getting_the_weather">Getting the weather…</string>
 
     <string name="clear">Clear</string>
     <string name="sunny">Sunny</string>
@@ -28,7 +41,4 @@
     <string name="mostly_foggy">Foggy</string>
     <string name="foggy">Dense fog</string>
     <string name="title_activity_settings">SettingsActivity</string>
-
-    <string name="settings">Settings</string>
-    <string name="cities">Cities</string>
 </resources>

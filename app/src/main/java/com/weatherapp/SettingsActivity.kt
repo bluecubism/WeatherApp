@@ -18,7 +18,6 @@ class SettingsActivity : AppCompatActivity() {
 
         _btnSettings = findViewById(R.id.button_settings)
         _btnSettings.setOnClickListener {
-            Log.d("SettingsActivity", "Button pressed, going back to Main")
             finish()
         }
 

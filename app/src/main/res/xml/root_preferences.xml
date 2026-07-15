@@ -1,15 +1,20 @@
-<PreferenceScreen
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory
-        app:title="@string/settings">
+    <PreferenceCategory app:title="@string/settings">
+
+        <SwitchPreference
+            android:key="use_raw_data_key"
+            android:defaultValue="false"
+            android:summary="@string/use_raw_data_summary"
+            android:title="@string/use_raw_data" />
 
         <ListPreference
             app:key="cities_key"
-            app:defaultValue="-79.38,43.65,-79.38,43.65"
+            app:defaultValue="Toronto"
             app:entries="@array/city_entries"
-            app:entryValues="@array/city_values"
-            app:title="@string/cities"
+            app:entryValues="@array/city_entries"
+            app:title="@string/city"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>

@@ -17,8 +17,29 @@ import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.coroutines.resumeWithException
 
 class ApiCall {
+    private val retrofit : Retrofit by lazy {
+        // lazy load heavy object, init only when called
+        Retrofit.Builder()
+            .baseUrl(_weatherApiUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // bounding box = (minx,miny,maxx,maxy)
+    private val bboxMapProcessed : Map<String, String> by lazy { mapOf(
+        "Toronto" to "-79.38,43.65,-79.38,43.65",
+        "Markham" to "-79.26,43.88,-79.26,43.88",
+        "Brampton" to "-79.76,43.69,-79.76,43.69"
+    )}
+
+    private val bboxMapRaw : Map<String, String> by lazy { mapOf(
+        "Toronto" to "-79.7,43.5,-79.1,43.9",
+        // TODO: change markham and bramptons bbox values
+        "Markham" to "-79.26,43.88,-79.26,43.88",
+        "Brampton" to "-79.76,43.69,-79.76,43.69"
+    )}
+
     private val _weatherApiUrl = "https://api.weather.gc.ca/"
-    private val _torontoBbox = "-79.38,43.65,-79.38,43.65"
 
     /**
      * How many hours before the current time to call entries from.
@@ -28,14 +49,6 @@ class ApiCall {
      * Max number of entries to search to be returned.
      */
     private val _maxLimit = 10
-
-    private val retrofit : Retrofit by lazy {
-        // lazy load heavy object, init only when called
-        Retrofit.Builder()
-            .baseUrl(_weatherApiUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
 
     /**
      * Get current real-time data (raw data)
@@ -77,8 +90,8 @@ class ApiCall {
      */
     private fun getCityPageWeatherRealtimeApiData(
         context: Context,
-        datetime : String? = null,
-        bbox : String? = null,
+        datetime : String?,
+        bbox : String?,
         callback: (CityPageWeatherRealtimeApiData) -> Unit)
     {
         val service: CityPageWeatherRealtimeApiInterface = retrofit.create(CityPageWeatherRealtimeApiInterface::class.java)
@@ -110,20 +123,25 @@ class ApiCall {
     /**
      * Get current real-time data.
      */
-    suspend fun getCurrentData(context: Context, useRawData: Boolean) : WeatherSnapshot {
+    suspend fun getCurrentData(context: Context) : WeatherSnapshot {
         return suspendCancellableCoroutine { continuation ->
             try {
                 val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-                val bbox = prefs.getString("cities_key", _torontoBbox)
+                val city = prefs.getString("cities_key", "Toronto")
+                val useRawData = prefs.getBoolean("use_raw_data_key", false)
 
                 if (!useRawData) {
+                    val bbox = bboxMapProcessed[city]
+
                     getCityPageWeatherRealtimeApiData(context, null, bbox) { data ->
                         val weather = ApiConverter().CPWRealtimeToWeatherSnapshot(context, data.features)
                         continuation.resume(weather)
                     }
                 } else {
+                    val bbox = bboxMapRaw[city]
                     val dt = OffsetDateTime.now()
                     val dtBefore = dt.minusHours(_hrBefore)
+
                     getSwobRealtimeApiData(context, "$dtBefore/$dt", bbox) { data ->
                         val weather = ApiConverter().SwobRealtimeToWeatherSnapshot(context, data.features)
                         continuation.resume(weather)
@@ -141,7 +159,8 @@ class ApiCall {
     suspend fun getPredictedData(context: Context) : List<WeatherSnapshot> {
         return suspendCancellableCoroutine { continuation ->
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val bbox = prefs.getString("cities_key", _torontoBbox)
+            val city = prefs.getString("cities_key", "Toronto")
+            val bbox = bboxMapProcessed[city]
 
             getCityPageWeatherRealtimeApiData(context, null, bbox) { data ->
                 val weather = ApiConverter().CPWRealtimeHourlyForecastToWeatherSnapshot(data.features)
