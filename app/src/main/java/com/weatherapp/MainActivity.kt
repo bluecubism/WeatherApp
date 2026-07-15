@@ -80,9 +80,14 @@ class MainActivity : ComponentActivity() {
 
             _weatherViewModel.weathers.collect { data ->
                 Log.v("MainActivity", "${data.first}")
-                setupCurrentWeatherView(true)
+
+                val prefs = PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
+                val useRawData = prefs.getBoolean("use_raw_data_key", _useRawData)
+                val interval = prefs.getString("weather_intervals_key", "1")?.toInt() ?: 1
+
+                setupCurrentWeatherView(true, useRawData)
                 updateCurrentWeatherUI(data.first)
-                updatePredictedWeatherUI(data.second)
+                updatePredictedWeatherUI(data.second, interval)
                 _progressRefresh.visibility = View.INVISIBLE
                 _txtRefresh.visibility = View.INVISIBLE
             }
@@ -116,26 +121,13 @@ class MainActivity : ComponentActivity() {
             fetchData()
         }
 
-//        // add self as observer
-//        _weatherViewModel.weathers.observe(this) { data ->
-//            Log.v("MainActivity", "$data.first")
-//            setupCurrentWeatherView(true)
-//            updateCurrentWeatherUI(data.first)
-//            updatePredictedWeatherUI(data.second)
-//            _progressRefresh.visibility = View.INVISIBLE
-//            _txtRefresh.visibility = View.INVISIBLE
-//        }
-
         // inflate current weather view group
-        setupCurrentWeatherView(false)
+        setupCurrentWeatherView(false, _useRawData)
     }
 
-    private fun setupCurrentWeatherView(alreadyInflatedView : Boolean) {
+    private fun setupCurrentWeatherView(alreadyInflatedView : Boolean, useRawData : Boolean) {
         // inflate with views
         var currWeatherView = findViewById<ViewGroup>(R.id.view_current_weather)
-
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val useRawData = prefs.getBoolean("use_raw_data_key", _useRawData)
 
         if (useRawData != _useRawData) {
             _useRawData = useRawData
@@ -275,14 +267,16 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "Done updating current weather UI")
     }
 
-    private fun updatePredictedWeatherUI(dataList: List<WeatherSnapshot>) {
-        // get the linear layout inside the horizontal scroll view
+    private fun updatePredictedWeatherUI(dataList: List<WeatherSnapshot>, interval: Int) {
+        // get the linear layout inside the scroll view
         val currView = findViewById<ViewGroup>(R.id.view_predicted_weather).getChildAt(0) as ViewGroup
 
         currView.removeAllViews()
         currView.visibility = View.VISIBLE
 
-        for (data in dataList) {
+        var i = interval - 1
+        while (i < dataList.size) {
+            val data = dataList[i]
             val forecast = layoutInflater.inflate(R.layout.forecast_horizontal, currView, false)
 
             var txt : TextView = forecast.findViewById(R.id.time)
@@ -311,6 +305,8 @@ class MainActivity : ComponentActivity() {
             forecast.layoutParams = params
 
             currView.addView(forecast)
+
+            i += interval
         }
 
         Log.d("MainActivity", "Done updating predicted weather UI")

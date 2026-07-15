@@ -3,7 +3,7 @@
 
     <PreferenceCategory app:title="@string/settings">
 
-        <SwitchPreference
+        <CheckBoxPreference
             android:key="use_raw_data_key"
             android:defaultValue="false"
             android:summary="@string/use_raw_data_summary"
@@ -16,6 +16,14 @@
             app:entryValues="@array/city_entries"
             app:title="@string/city"
             app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="weather_intervals_key"
+            app:defaultValue="1"
+            app:entries="@array/weather_intervals_entries"
+            app:entryValues="@array/weather_intervals_values"
+            app:title="@string/hourly_forecast_interval"
+            app:useSimpleSummaryProvider="true"/>
 
     </PreferenceCategory>
 
