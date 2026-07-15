@@ -24,7 +24,7 @@ class ApiConverter {
         val properties = features.first().properties
         val conds = properties.currentConditions
 
-        data.stationName = properties.region.en // use region name
+        data.stationName = properties.name.en
         data.airTemp = "${conds.temperature.value.en}°${conds.temperature.units.en}"
         data.relHum = "${conds.relativeHumidity?.value?.en}${conds.relativeHumidity?.units?.en}"
 

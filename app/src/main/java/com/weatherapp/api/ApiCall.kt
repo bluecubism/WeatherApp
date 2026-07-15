@@ -3,6 +3,7 @@ package com.weatherapp.api
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.preference.PreferenceManager
 import com.weatherapp.api.apidata.*
 import com.weatherapp.snapshot.*
 import java.time.OffsetDateTime
@@ -17,7 +18,7 @@ import kotlin.coroutines.resumeWithException
 
 class ApiCall {
     private val _weatherApiUrl = "https://api.weather.gc.ca/"
-    private val _torontoBbox = "-79.64,43.58,-79.11,43.86"
+    private val _torontoBbox = "-79.38,43.65,-79.38,43.65"
 
     /**
      * How many hours before the current time to call entries from.
@@ -28,21 +29,25 @@ class ApiCall {
      */
     private val _maxLimit = 10
 
+    private val retrofit : Retrofit by lazy {
+        // lazy load heavy object, init only when called
+        Retrofit.Builder()
+            .baseUrl(_weatherApiUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     /**
      * Get current real-time data (raw data)
      */
     private fun getSwobRealtimeApiData(
         context: Context,
-        datetime: String? = null,
-        bbox: String? = null,
+        datetime: String?,
+        bbox: String?,
         callback: (SwobRealtimeApiData) -> Unit)
     {
-        val retrofit: Retrofit = Retrofit.Builder()
-            .baseUrl(_weatherApiUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
         val service: SwobRealtimeApiInterface = retrofit.create(SwobRealtimeApiInterface::class.java)
-        // make api request
+
         val call: Call<SwobRealtimeApiData> = service.getApiData(
             datetime,
             bbox,
@@ -68,7 +73,7 @@ class ApiCall {
     }
 
     /**
-     * Get current real-time data (processed data)
+     * Get current real-time & hourly forecast data (processed data)
      */
     private fun getCityPageWeatherRealtimeApiData(
         context: Context,
@@ -76,12 +81,8 @@ class ApiCall {
         bbox : String? = null,
         callback: (CityPageWeatherRealtimeApiData) -> Unit)
     {
-        val retrofit: Retrofit = Retrofit.Builder()
-            .baseUrl(_weatherApiUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
         val service: CityPageWeatherRealtimeApiInterface = retrofit.create(CityPageWeatherRealtimeApiInterface::class.java)
-        // make api request
+
         val call: Call<CityPageWeatherRealtimeApiData> = service.getApiData(
             datetime,
             bbox,
@@ -106,18 +107,24 @@ class ApiCall {
         })
     }
 
+    /**
+     * Get current real-time data.
+     */
     suspend fun getCurrentData(context: Context, useRawData: Boolean) : WeatherSnapshot {
         return suspendCancellableCoroutine { continuation ->
             try {
+                val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+                val bbox = prefs.getString("cities_key", _torontoBbox)
+
                 if (!useRawData) {
-                    getCityPageWeatherRealtimeApiData(context, null, _torontoBbox) { data ->
+                    getCityPageWeatherRealtimeApiData(context, null, bbox) { data ->
                         val weather = ApiConverter().CPWRealtimeToWeatherSnapshot(context, data.features)
                         continuation.resume(weather)
                     }
                 } else {
                     val dt = OffsetDateTime.now()
                     val dtBefore = dt.minusHours(_hrBefore)
-                    getSwobRealtimeApiData(context, "$dtBefore/$dt", _torontoBbox) { data ->
+                    getSwobRealtimeApiData(context, "$dtBefore/$dt", bbox) { data ->
                         val weather = ApiConverter().SwobRealtimeToWeatherSnapshot(context, data.features)
                         continuation.resume(weather)
                     }
@@ -128,9 +135,15 @@ class ApiCall {
         }
     }
 
+    /**
+     * Get hourly forecast data.
+     */
     suspend fun getPredictedData(context: Context) : List<WeatherSnapshot> {
         return suspendCancellableCoroutine { continuation ->
-            getCityPageWeatherRealtimeApiData(context) { data ->
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val bbox = prefs.getString("cities_key", _torontoBbox)
+
+            getCityPageWeatherRealtimeApiData(context, null, bbox) { data ->
                 val weather = ApiConverter().CPWRealtimeHourlyForecastToWeatherSnapshot(data.features)
                 continuation.resume(weather)
             }

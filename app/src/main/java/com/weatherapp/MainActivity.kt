@@ -1,6 +1,8 @@
 package com.weatherapp
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -20,11 +22,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 // TODO:
-//  add settings for weather interval & city
-//    save settings
-//    ui for upcoming weather interval (1 hr, 3 hrs, etc)
-//    let user choose city to view weather of
-//  unit test, api test
+//  add settings for weather interval (1 hr, 3 hrs, etc)
+//  unit test, integration test, api test, ui test
 
 class MainActivity : ComponentActivity() {
     private var _useRawData = false
@@ -53,11 +52,12 @@ class MainActivity : ComponentActivity() {
         val initialDelay = nextHr.timeInMillis - Calendar.getInstance().timeInMillis
         scheduler.scheduleWithFixedDelay(
             {
-                Log.d("MainActivity", "Run scheduled task (update weathers), ${Calendar.getInstance()}")
-                runOnUiThread { fetchData() }
+                Log.d("MainActivity", "Run scheduled task (update weathers)")
+                fetchData()
             },
             // start at next hour, run again in 1 hr (3,600,000 ms)
-            initialDelay, 3600000, TimeUnit.MILLISECONDS)
+            initialDelay, 3600000, TimeUnit.MILLISECONDS
+        )
     }
 
     private fun fetchData() {
@@ -96,8 +96,17 @@ class MainActivity : ComponentActivity() {
             _txtRefresh.visibility = View.INVISIBLE
         }
 
-        // set button on clicks
-        _btnRefresh.setOnClickListener { fetchData() } // fetch data if user clicks the refresh button
+        // set button on-clicks
+        _btnSettings.setOnClickListener {
+            Log.d("SettingsActivity", "Settings button pressed, going to Settings")
+            val i = Intent(this, SettingsActivity::class.java)
+            startActivity(i)
+        }
+
+        _btnRefresh.setOnClickListener { // fetch data if user clicks the refresh button
+            Log.d("MainActivity", "Refresh button pressed, re-getting weather data")
+            fetchData()
+        }
 
         _btnData.setOnClickListener { // swap to using the other data (raw or processed) and re-fetch the data
             _useRawData = !_useRawData

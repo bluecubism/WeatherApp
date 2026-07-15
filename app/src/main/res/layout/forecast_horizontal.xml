@@ -99,7 +99,10 @@
     <TextView
         android:id="@+id/weather"
         android:layout_width="120dp"
-        android:layout_height="wrap_content"
+        android:layout_height="90dp"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMaxTextSize="25sp"
+        android:autoSizeMinTextSize="10sp"
         android:gravity="center"
         android:text="Chance of showers. Risk of thunderstorms"
         android:textColor="@color/white"

@@ -1,0 +1,17 @@
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:title="@string/settings">
+
+        <ListPreference
+            app:key="cities_key"
+            app:defaultValue="-79.38,43.65,-79.38,43.65"
+            app:entries="@array/city_entries"
+            app:entryValues="@array/city_values"
+            app:title="@string/cities"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

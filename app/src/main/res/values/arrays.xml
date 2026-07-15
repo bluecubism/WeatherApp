@@ -1,0 +1,14 @@
+<resources>
+    <string-array name="city_entries">
+        <item>Toronto</item>
+        <item>Markham</item>
+        <item>Brampton</item>
+    </string-array>
+
+    <!-- bounding box = (minx,miny,maxx,maxy) -->
+    <string-array name="city_values">
+        <item>-79.38,43.65,-79.38,43.65</item>
+        <item>-79.26,43.88,-79.26,43.88</item>
+        <item>-79.76,43.69,-79.76,43.69</item>
+    </string-array>
+</resources>

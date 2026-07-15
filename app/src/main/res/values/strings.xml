@@ -27,4 +27,8 @@
     <string name="slightly_foggy">Misty</string>
     <string name="mostly_foggy">Foggy</string>
     <string name="foggy">Dense fog</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <string name="settings">Settings</string>
+    <string name="cities">Cities</string>
 </resources>
