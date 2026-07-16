@@ -3,8 +3,14 @@
 
     <string-array name="city_entries">
         <item>Toronto</item>
-        <item>Markham</item>
+        <item>Oshawa</item>
         <item>Brampton</item>
+    </string-array>
+
+    <string-array name="city_values">
+        <item>-79.64,43.58,-79.11,43.86</item>
+        <item>-78.92,43.8,-78.78,44.02</item>
+        <item>-79.92,43.67,-79.62,43.80</item>
     </string-array>
 
     <string-array name="weather_intervals_entries">

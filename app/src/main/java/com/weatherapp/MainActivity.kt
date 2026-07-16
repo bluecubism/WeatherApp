@@ -1,5 +1,6 @@
 package com.weatherapp
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -12,24 +13,40 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import coil3.load
 import coil3.request.placeholder
 import com.weatherapp.snapshot.WeatherSnapshot
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-// TODO:
-//  auto refresh data if a setting changed
-//  add settings for weather interval (1 hr, 3 hrs, etc)
-//  unit test, integration test, api test, ui test
+// TODO: unit test, integration test, api test, ui test
 
 class MainActivity : ComponentActivity() {
-    private var _useRawData = false
+    private val _registerActivity = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult())
+    { activityResult ->
+        // from settings activity, get if a preference was changed
+        // if yes, then re-fetch weather data to new preferences/specification
+        val intentExtras = activityResult.data?.extras
+        Log.d("MainActivity.registerActivity", "intentExtras = $intentExtras")
+        if (activityResult.resultCode == Activity.RESULT_OK && intentExtras != null) {
+            val prefsChanged = intentExtras.getBoolean("PrefsChanged")
+            Log.d("MainActivity.registerActivity", "prefsChanged = $prefsChanged")
+            if (prefsChanged) {
+                fetchData()
+            }
+        }
+    }
+
     private lateinit var _weatherViewModel : WeatherViewModel
+    private var _useRawData = false
+    private var _callingApi = false
 
     private lateinit var _btnSettings : ImageButton
 
@@ -41,12 +58,42 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        setup()
+        fetchData() // fetch on startup
+    }
+
+    /* =============================
+              SETUP
+    ============================= */
+    private fun setup() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val useRawData = prefs.getBoolean("use_raw_data_key", _useRawData)
         _useRawData = useRawData
 
-        setup()
-        fetchData() // fetch on startup
+        _weatherViewModel = WeatherViewModel()
+
+        _btnSettings = findViewById(R.id.button_settings)
+        _btnRefresh = findViewById(R.id.button_refresh)
+        _progressRefresh = findViewById(R.id.progress_refresh)
+        _txtRefresh = findViewById(R.id.text_refresh)
+
+        // make these invisible by default
+        _progressRefresh.visibility = View.INVISIBLE
+        _txtRefresh.visibility = View.INVISIBLE
+
+        // set button on-clicks
+        _btnSettings.setOnClickListener {
+            val i = Intent(this, SettingsActivity::class.java)
+            // start settings activity and wait for activity result and intent back
+            _registerActivity.launch(i)
+        }
+
+        _btnRefresh.setOnClickListener { // fetch data if user clicks the refresh button
+            fetchData()
+        }
+
+        // inflate current weather view group
+        setupCurrentWeatherView(false, _useRawData)
 
         // schedule task to run every hour, i.e. at 8:00AM, then 9:00AM, etc
         val scheduler = ScheduledThreadPoolExecutor(1)
@@ -67,7 +114,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun fetchData() {
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.Main) {
+            if (_callingApi) return@launch
+            _callingApi = true
+
             _progressRefresh.visibility = View.VISIBLE
             _txtRefresh.visibility = View.VISIBLE
 
@@ -78,6 +128,7 @@ class MainActivity : ComponentActivity() {
             // fetch the data
             _weatherViewModel.fetch(this@MainActivity)
 
+            // .collect is a suspend function, must be called in suspend or coroutine
             _weatherViewModel.weathers.collect { data ->
                 Log.v("MainActivity", "${data.first}")
 
@@ -88,41 +139,13 @@ class MainActivity : ComponentActivity() {
                 setupCurrentWeatherView(true, useRawData)
                 updateCurrentWeatherUI(data.first)
                 updatePredictedWeatherUI(data.second, interval)
+
                 _progressRefresh.visibility = View.INVISIBLE
                 _txtRefresh.visibility = View.INVISIBLE
+
+                _callingApi = false
             }
-
         }
-    }
-
-    /* =============================
-              SETUP
-    ============================= */
-    private fun setup() {
-        _weatherViewModel = WeatherViewModel()
-
-        _btnSettings = findViewById(R.id.button_settings)
-        _btnRefresh = findViewById(R.id.button_refresh)
-        _progressRefresh = findViewById(R.id.progress_refresh)
-        _txtRefresh = findViewById(R.id.text_refresh)
-
-        // make these invisible by default
-        _progressRefresh.visibility = View.INVISIBLE
-        _txtRefresh.visibility = View.INVISIBLE
-
-
-        // set button on-clicks
-        _btnSettings.setOnClickListener {
-            val i = Intent(this, SettingsActivity::class.java)
-            startActivity(i)
-        }
-
-        _btnRefresh.setOnClickListener { // fetch data if user clicks the refresh button
-            fetchData()
-        }
-
-        // inflate current weather view group
-        setupCurrentWeatherView(false, _useRawData)
     }
 
     private fun setupCurrentWeatherView(alreadyInflatedView : Boolean, useRawData : Boolean) {

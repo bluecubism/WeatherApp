@@ -25,21 +25,8 @@ class ApiCall {
             .build()
     }
 
-    // bounding box = (minx,miny,maxx,maxy)
-    private val bboxMapProcessed : Map<String, String> by lazy { mapOf(
-        "Toronto" to "-79.38,43.65,-79.38,43.65",
-        "Markham" to "-79.26,43.88,-79.26,43.88",
-        "Brampton" to "-79.76,43.69,-79.76,43.69"
-    )}
-
-    private val bboxMapRaw : Map<String, String> by lazy { mapOf(
-        "Toronto" to "-79.7,43.5,-79.1,43.9",
-        // TODO: change markham and bramptons bbox values
-        "Markham" to "-79.26,43.88,-79.26,43.88",
-        "Brampton" to "-79.76,43.69,-79.76,43.69"
-    )}
-
     private val _weatherApiUrl = "https://api.weather.gc.ca/"
+    private val _torontoBbox = "-79.64,43.58,-79.11,43.86"
 
     /**
      * How many hours before the current time to call entries from.
@@ -66,6 +53,8 @@ class ApiCall {
             bbox,
             _maxLimit,
             "json")
+
+        Log.v("ApiCall Swob", "URL: ${call.request().url}")
 
         // use enqueue() to make async api request
         call.enqueue(object : Callback<SwobRealtimeApiData> {
@@ -102,6 +91,8 @@ class ApiCall {
             _maxLimit,
             "json")
 
+        Log.v("ApiCall CityPageWeather", "URL: ${call.request().url}")
+
         // use enqueue() to make async api request
         call.enqueue(object : Callback<CityPageWeatherRealtimeApiData> {
             // api response received successfully
@@ -127,18 +118,15 @@ class ApiCall {
         return suspendCancellableCoroutine { continuation ->
             try {
                 val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-                val city = prefs.getString("cities_key", "Toronto")
+                val bbox = prefs.getString("cities_key", _torontoBbox)
                 val useRawData = prefs.getBoolean("use_raw_data_key", false)
 
                 if (!useRawData) {
-                    val bbox = bboxMapProcessed[city]
-
                     getCityPageWeatherRealtimeApiData(context, null, bbox) { data ->
                         val weather = ApiConverter().CPWRealtimeToWeatherSnapshot(context, data.features)
                         continuation.resume(weather)
                     }
                 } else {
-                    val bbox = bboxMapRaw[city]
                     val dt = OffsetDateTime.now()
                     val dtBefore = dt.minusHours(_hrBefore)
 
@@ -159,8 +147,7 @@ class ApiCall {
     suspend fun getPredictedData(context: Context) : List<WeatherSnapshot> {
         return suspendCancellableCoroutine { continuation ->
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val city = prefs.getString("cities_key", "Toronto")
-            val bbox = bboxMapProcessed[city]
+            val bbox = prefs.getString("cities_key", _torontoBbox)
 
             getCityPageWeatherRealtimeApiData(context, null, bbox) { data ->
                 val weather = ApiConverter().CPWRealtimeHourlyForecastToWeatherSnapshot(data.features)

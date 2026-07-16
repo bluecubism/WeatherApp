@@ -11,9 +11,9 @@
 
         <ListPreference
             app:key="cities_key"
-            app:defaultValue="Toronto"
+            app:defaultValue="-79.64,43.58,-79.11,43.86"
             app:entries="@array/city_entries"
-            app:entryValues="@array/city_entries"
+            app:entryValues="@array/city_values"
             app:title="@string/city"
             app:useSimpleSummaryProvider="true" />
 
