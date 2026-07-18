@@ -193,7 +193,7 @@ data class CityPageWeatherRealtimeApiData(
         /**
          * Used for lop, i.e. "Low"
          */
-        @SerializedName("category") val category: LocalizedValue,
+        @SerializedName("category") val category: LocalizedValue?,
         /**
          * Used only for measuring pressure, i.e. 0.01
          */

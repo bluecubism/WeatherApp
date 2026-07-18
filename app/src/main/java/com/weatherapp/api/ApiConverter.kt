@@ -27,9 +27,10 @@ class ApiConverter {
         val properties = features.first().properties
         val conds = properties.currentConditions
 
-        data.stationName = properties.name.en
-        data.airTemp = "${conds.temperature.value.en}°${conds.temperature.units.en}"
-        data.relHum = "${conds.relativeHumidity?.value?.en}${conds.relativeHumidity?.units?.en}"
+        data.region = properties.name.en
+        data.timestamp = OffSetDateTimeToConvertedTime(conds.timestamp.en)
+        data.temperature = "${conds.temperature.value.en}°${conds.temperature.units.en}"
+        data.humidity = "${conds.relativeHumidity?.value?.en}${conds.relativeHumidity?.units?.en}"
 
         val windSpeed = conds.wind?.speed?.value?.en.toString() // wind speed can be a number or "calm"
         if (windSpeed.all { c -> c.isDigit() || c == '.' }) { // if wind speed is a number
@@ -108,16 +109,13 @@ class ApiConverter {
         for (forecast in hourlyForecasts) {
             val currData = WeatherSnapshot()
 
-            val zoneId = ZonedDateTime.now().zone // ex. get zone id of "America/New_York"
-            val timestamp = OffsetDateTime.parse(forecast.timestamp).atZoneSameInstant(zoneId)
-            val timeFormat = DateTimeFormatter.ofPattern("h:mm a") // ex. display time as 3:00PM or 10:00PM
-            currData.timestamp = timeFormat.format(timestamp)
+            currData.timestamp = OffSetDateTimeToConvertedTime(forecast.timestamp)
 
             currData.weather = forecast.condition.en
             currData.weatherImg = CPWRealtimeIconCodeToDrawable(forecast.iconCode.value)
             if (!forecast.iconCode.url.isNullOrEmpty()) { currData.weatherImgUrl = forecast.iconCode.url }
 
-            currData.airTemp = "${forecast.temperature.value.en}°${forecast.temperature.units.en}"
+            currData.temperature = "${forecast.temperature.value.en}°${forecast.temperature.units.en}"
 
             currData.windSpeed = "${forecast.wind.speed.value.en}${forecast.wind.speed.units.en}"
             if (!forecast.wind.direction?.windDirFull?.en.isNullOrEmpty()) {
@@ -126,6 +124,7 @@ class ApiConverter {
             else if (!forecast.wind.direction?.value?.en.isNullOrEmpty()) {
                 currData.windDir = forecast.wind.direction.value.en
             }
+            if (!forecast.wind.gust?.units?.en.isNullOrEmpty()) currData.windGust = "${forecast.wind.gust.value.en}${forecast.wind.gust.units.en}"
 
             data.add(currData)
         }
@@ -162,9 +161,9 @@ class ApiConverter {
         var visUnit : String? = "" // in km
 
         // these are always present in all entries
-        data.stationName = properties.stnNamValue
-        data.airTemp = properties.airTemp.toString() + properties.airTempUom
-        data.relHum = properties.relHum.toString() + properties.relHumUom
+        data.region = properties.stnNamValue
+        data.temperature = properties.airTemp.toString() + properties.airTempUom
+        data.humidity = properties.relHum.toString() + properties.relHumUom
 
         // if any unit is missing, get the last n entries or past x hours, whichever is closer
         var i = 1 // already checked the first property, go to the next
@@ -390,5 +389,12 @@ class ApiConverter {
             // and more icon codes
             else -> return 0
         }
+    }
+
+    private fun OffSetDateTimeToConvertedTime(timestamp: String) : String {
+        val timeFormat = DateTimeFormatter.ofPattern("h:mm a") // ex. display time as 3:00PM or 10:00PM
+        val zoneId = ZonedDateTime.now().zone // ex. get zone id = "America/New_York"
+        val timestamp = OffsetDateTime.parse(timestamp).atZoneSameInstant(zoneId)
+        return timeFormat.format(timestamp)
     }
 }

@@ -25,17 +25,15 @@ import java.util.Calendar
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-// TODO: unit test, integration test, api test, ui test
-
 class MainActivity : ComponentActivity() {
     private val _registerActivity = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult())
     { activityResult ->
-        // from settings activity, get if a preference was changed
+        // from SettingsActivity, get if a preference was changed
         // if yes, then re-fetch weather data to new preferences/specification
         val intentExtras = activityResult.data?.extras
         Log.d("MainActivity.registerActivity", "intentExtras = $intentExtras")
-        if (activityResult.resultCode == Activity.RESULT_OK && intentExtras != null) {
+        if (activityResult.resultCode == RESULT_OK && intentExtras != null) {
             val prefsChanged = intentExtras.getBoolean("PrefsChanged")
             Log.d("MainActivity.registerActivity", "prefsChanged = $prefsChanged")
             if (prefsChanged) {
@@ -206,11 +204,11 @@ class MainActivity : ComponentActivity() {
 
         // station or region name
         txt = findViewById(R.id.text_station_name)
-        txt.text = data.stationName
+        txt.text = data.region
 
         // air temperature
         txt = findViewById(R.id.text_air_temperature)
-        txt.text = data.airTemp
+        txt.text = data.temperature
 
         if (!_useRawData) {
             // main weather image
@@ -232,7 +230,7 @@ class MainActivity : ComponentActivity() {
             var subView = currView.getChildAt(0)
             txt = subView.findViewById(R.id.text)
             // no need to change image for humidity
-            txt.text = "${data.relHum}\n${getText(R.string.humidity)}"
+            txt.text = "${data.humidity}\n${getText(R.string.humidity)}"
 
             // update wind speed
             subView = currView.getChildAt(1)
@@ -248,7 +246,7 @@ class MainActivity : ComponentActivity() {
 
             // relative humidity
             txt = findViewById(R.id.text_relative_humidity)
-            txt.text = "${getText(R.string.relative_humidity)}: " + data.relHum
+            txt.text = "${getText(R.string.relative_humidity)}: " + data.humidity
 
             // wind speed
             txt = findViewById(R.id.text_wind_speed)
@@ -317,7 +315,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             txt = forecast.findViewById(R.id.temp)
-            txt.text = data.airTemp
+            txt.text = data.temperature
 
             txt = forecast.findViewById(R.id.wind)
             txt.text = data.windSpeed
