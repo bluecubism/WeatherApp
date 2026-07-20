@@ -391,8 +391,11 @@ class ApiConverter {
         }
     }
 
+    /**
+     * Convert given OffsetDateTime (as String)
+     */
     private fun OffSetDateTimeToConvertedTime(timestamp: String) : String {
-        val timeFormat = DateTimeFormatter.ofPattern("h:mm a") // ex. display time as 3:00PM or 10:00PM
+        val timeFormat = DateTimeFormatter.ofPattern("h:mm a", Locale.US) // ex. display time as 3:00 PM
         val zoneId = ZonedDateTime.now().zone // ex. get zone id = "America/New_York"
         val timestamp = OffsetDateTime.parse(timestamp).atZoneSameInstant(zoneId)
         return timeFormat.format(timestamp)

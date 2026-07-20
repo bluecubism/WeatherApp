@@ -5,9 +5,9 @@
     <string name="city">City</string>
 
     <string name="use_raw_data">Use raw data</string>
-    <string name="use_raw_data_summary">Use raw data or processed data.
-        \n\nRaw data is acquired from weather surface observations, which this app then translates into the current weather.
-        \n\nProcessed data is weather data that is pre-processed by Environment Canada, and as such, more likely to be accurate.
+    <string name="use_raw_data_summary">Use raw data or processed data for the current weather.
+        \n\nRaw data is acquired from weather surface observations, which this app translates.
+        \n\nProcessed data is more likely to be accurate (pre-processed by Environment Canada).
     </string>
 
     <string name="hourly_forecast_interval">Hourly forecast interval</string>
